@@ -2,7 +2,7 @@ import colorsys
 import re
 
 import requests
-from flask import Flask, Response, jsonify, request
+from flask import Flask, Response, jsonify, request, send_file
 
 app = Flask(__name__)
 
@@ -67,94 +67,7 @@ def generate_palette_by_mode(hex_color, mode):
 
 @app.route("/", methods=["GET"])
 def home():
-    return """<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Palette Generator API Playground</title>
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #f8fafc; color: #1e293b; }
-        h1 { color: #0f172a; }
-        .control-panel { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
-        input, select, button { padding: 10px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 6px; }
-        input[type="color"] { width: 52px; height: 44px; padding: 4px; cursor: pointer; }
-        button { background: #2563eb; color: white; border: none; cursor: pointer; }
-        button:hover { background: #1d4ed8; }
-        button:disabled { opacity: .65; cursor: wait; }
-        .preview-box { margin-top: 20px; }
-        iframe { border: none; width: 100%; height: 140px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); background: white; }
-        pre { background: #0f172a; color: #38bdf8; padding: 15px; border-radius: 8px; overflow-x: auto; min-height: 48px; }
-        .error { color: #b91c1c; }
-        @media (max-width: 520px) { body { margin: 24px auto; } .control-panel > * { flex: 1 1 auto; } }
-    </style>
-</head>
-<body>
-    <h1>🎨 Palette Generator Playground</h1>
-    <p>直接測試調色盤 API，並預覽生成的 SVG 色卡。</p>
-
-    <div class="control-panel">
-        <label for="colorPicker">主色</label>
-        <input type="color" id="colorPicker" value="#3498db" aria-label="選擇主色">
-        <label for="modeSelect">配色模式</label>
-        <select id="modeSelect">
-            <option value="analogous">類似色 (Analogous)</option>
-            <option value="complementary">互補色 (Complementary)</option>
-            <option value="ai">AI 配色 (Colormind)</option>
-        </select>
-        <button id="generateButton" type="button">生成調色盤</button>
-    </div>
-
-    <div class="preview-box">
-        <h2>SVG 卡片預覽</h2>
-        <iframe id="svgFrame" title="調色盤 SVG 預覽" src="/api/palette/preview.svg?colors=3498db,2ecc71,f1c40f,e67e22,e74c3c"></iframe>
-    </div>
-
-    <div class="preview-box">
-        <h2>API JSON 回傳結果</h2>
-        <pre id="jsonResult" aria-live="polite">正在載入調色盤…</pre>
-    </div>
-
-    <script>
-        const colorPicker = document.getElementById('colorPicker');
-        const modeSelect = document.getElementById('modeSelect');
-        const generateButton = document.getElementById('generateButton');
-        const jsonResult = document.getElementById('jsonResult');
-        const svgFrame = document.getElementById('svgFrame');
-
-        async function fetchPalette() {
-            generateButton.disabled = true;
-            jsonResult.classList.remove('error');
-            jsonResult.textContent = '正在產生調色盤…';
-            try {
-                const params = new URLSearchParams({
-                    hex: colorPicker.value.slice(1),
-                    mode: modeSelect.value
-                });
-                const response = await fetch(`/api/palette/generate?${params}`);
-                const data = await response.json();
-                jsonResult.textContent = JSON.stringify(data, null, 2);
-                if (!response.ok) {
-                    jsonResult.classList.add('error');
-                    return;
-                }
-                if (data.palette) {
-                    const colors = data.palette.map(color => color.replace('#', '')).join(',');
-                    svgFrame.src = `/api/palette/preview.svg?colors=${encodeURIComponent(colors)}`;
-                }
-            } catch (error) {
-                jsonResult.classList.add('error');
-                jsonResult.textContent = `無法連線至 API：${error.message}`;
-            } finally {
-                generateButton.disabled = false;
-            }
-        }
-
-        generateButton.addEventListener('click', fetchPalette);
-        fetchPalette();
-    </script>
-</body>
-</html>"""
+    return send_file(app.root_path + "/index.html")
 
 
 @app.route("/api/palette/generate", methods=["GET"])
